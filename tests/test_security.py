@@ -32,9 +32,8 @@ class TestPasswordHashing:
         assert hash1 != hash2
 
     def test_hash_has_expected_scheme_prefix(self):
-    """El hash generado debe usar el esquema bcrypt_sha256 de passlib."""
     hashed = get_password_hash("cualquierContraseña")
-    assert hashed.startswith("$bcrypt-sha256$")
+    assert hashed.startswith("$pbkdf2-sha256$")
 
 
 class TestCreateAccessToken:

@@ -25,15 +25,16 @@ class TestPasswordHashing:
         assert verify_password("contraseña_incorrecta", hashed) is False
 
     def test_same_password_produces_different_hashes(self):
-        """bcrypt debe generar hashes diferentes para la misma contraseña (salt aleatorio)."""
+        """El hashing debe generar hashes diferentes para la misma contraseña (salt aleatorio)."""
         password = "mismaContraseña"
         hash1 = get_password_hash(password)
         hash2 = get_password_hash(password)
         assert hash1 != hash2
 
     def test_hash_has_expected_scheme_prefix(self):
-    hashed = get_password_hash("cualquierContraseña")
-    assert hashed.startswith("$pbkdf2-sha256$")
+        """El hash generado debe usar el esquema pbkdf2_sha256 de passlib."""
+        hashed = get_password_hash("cualquierContraseña")
+        assert hashed.startswith("$pbkdf2-sha256$")
 
 
 class TestCreateAccessToken:
@@ -63,12 +64,12 @@ class TestCreateAccessToken:
     def test_token_with_custom_expiration(self):
         """create_access_token debe respetar el delta de expiración personalizado."""
         from datetime import timedelta, timezone, datetime
+
         delta = timedelta(hours=2)
         before = datetime.now(timezone.utc)
         token = create_access_token({"sub": "usuario_test"}, expires_delta=delta)
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         exp = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
-        # La expiración debe estar aproximadamente 2 horas en el futuro (±5 segundos)
         expected = before + delta
         assert abs((exp - expected).total_seconds()) < 5
 

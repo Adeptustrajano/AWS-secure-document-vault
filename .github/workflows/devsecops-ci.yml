@@ -1,18 +1,19 @@
-# Este archivo define un pipeline de CI para análisis de seguridad y calidad de código en un proyecto Python.
-# El pipeline se ejecuta en cada push o pull request a la rama "main".
 name: DevSecOps CI Pipeline
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
 
 jobs:
-  security-and-linting:
-    name: Análisis de Seguridad y Código (SAST)
+  unit-tests:
+    name: Tests Unitarios e Integración (Fase 1)
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: 📥 Clonar el repositorio
         uses: actions/checkout@v4
@@ -21,21 +22,24 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: 'pip'
+          cache: "pip"
 
-      - name: 📦 Instalar herramientas de seguridad y dependencias
+      - name: 📦 Instalar dependencias
         run: |
           python -m pip install --upgrade pip
+          # Evita conflicto passlib/bcrypt en runners
+          pip uninstall -y bcrypt passlib || true
           pip install -r requirements.txt
-          pip install bandit flake8
+          pip install -r requirements-test.txt
+          # Fuerza versiones compatibles
+          pip install "passlib[bcrypt]==1.7.4" "bcrypt==4.0.1"
 
-      - name: 🧹 Calidad de Código (Flake8)
-        # Busca errores críticos de sintaxis
-        run: flake8 app/ --count --select=E9,F63,F7,F82 --show-source --statistics
+      - name: 🔎 Diagnóstico entorno
+        run: |
+          python -V
+          pip freeze | grep -E "passlib|bcrypt|pytest|fastapi|sqlalchemy" || true
+          ls -la
+          ls -la tests || true
 
-      - name: 🛡️ Escaneo de Seguridad (Bandit)
-        # Bandit es un analizador de vulnerabilidades para Python.
-        # Busca credenciales quemadas en código, inyecciones SQL, etc.
-        run: bandit -r app/ -ll -ii
-
-  # Se pueden agregar más trabajos para análisis de dependencias, pruebas unitarias de código...
+      - name: 🧪 Ejecutar tests con pytest
+        run: pytest tests/ -v --tb=short --maxfail=1

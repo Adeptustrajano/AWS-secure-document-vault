@@ -1,0 +1,5 @@
+# Dependencias para ejecutar los tests de la Fase 1
+# Instalar con: pip install -r requirements-test.txt
+pytest==8.3.5
+httpx==0.28.1
+anyio==4.9.0

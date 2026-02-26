@@ -27,19 +27,13 @@ jobs:
       - name: 📦 Instalar dependencias
         run: |
           python -m pip install --upgrade pip
-          # Evita conflicto passlib/bcrypt en runners
-          pip uninstall -y bcrypt passlib || true
           pip install -r requirements.txt
           pip install -r requirements-test.txt
-          # Fuerza versiones compatibles
-          pip install "passlib[bcrypt]==1.7.4" "bcrypt==4.0.1"
 
-      - name: 🔎 Diagnóstico entorno
+      - name: 🔎 Verificar versiones críticas
         run: |
           python -V
           pip freeze | grep -E "passlib|bcrypt|pytest|fastapi|sqlalchemy" || true
-          ls -la
-          ls -la tests || true
 
       - name: 🧪 Ejecutar tests con pytest
         run: pytest tests/ -v --tb=short --maxfail=1
